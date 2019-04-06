@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.21'
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+    jcenter()
+}
+
+dependencies {
+    compile 'org.jetbrains.exposed:exposed:0.13.5'
+    compile 'com.jagrosh:jda-utilities:2.1.5'
+    compile 'net.dv8tion:JDA:3.8.3_462'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile "io.ktor:ktor-websockets:1.1.3"
+    compile "io.ktor:ktor-auth-jwt:1.1.3"
+    compile "io.ktor:ktor-server-netty:1.1.3"
+    compile "ch.qos.logback:logback-classic:1.2.3"
+    compile 'com.beust:klaxon:5.0.1'
+    compile 'org.postgresql:postgresql:42.2.5.jre7'
+    testCompile "io.ktor:ktor-server-tests:1.1.3"
+}
+
+group 'com.github.johnnyjayjay'
+version '1.0-SNAPSHOT'
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
