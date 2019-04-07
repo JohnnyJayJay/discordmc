@@ -10,7 +10,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 object Requests {
-    private const val baseURL = ""
+    private const val baseURL = "http://localhost" // TODO
 
     private val jsonParser = JsonParser()
     private val klaxon = Klaxon()

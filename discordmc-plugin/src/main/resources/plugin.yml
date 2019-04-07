@@ -1,0 +1,59 @@
+name: DiscordMc
+version: 1.0
+main: com.github.johnnyjayjay.discordmc.plugin.DiscordMc
+database: true
+prefix: "DiscordMc"
+author: "JohnnyJayJay"
+website: "https://github.com/johnnyjayjay/discordmc"
+
+commands:
+  register:
+    aliases: ["r", "link"]
+    permission: "discordmc.link.establish"
+    usage: "/register <verification code>"
+    description: "Establishes a link to a Discord server. Before doing this, you have to use _register in your Discord server to obtain a verification code"
+  detach:
+    aliases: ["disconnect"]
+    permission: "discordmc.link.detach"
+    usage: "/detach"
+    description: "Deletes the link to a Discord server if one exists"
+  linkinfo:
+    permission: "discordmc.link.info"
+    usage: "/linkinfo"
+    description: "Gives you information about whether this server is linked to a Discord server and to which"
+  discord:
+    aliases: ["d"]
+    permission: "discordmc.message.write"
+    usage: "/discord <message>"
+    description: "Sends a message to the linked Discord server if one is present and a message channel has been set"
+
+permissions:
+  discordmc.link.establish:
+    description: "Permission to connect this Minecraft server to a Discord server"
+  discordmc.link.detach:
+    description: "Permission to disconnect this Minecraft server from a Discord server"
+  discordmc.link.info:
+    description: "Permission to see if and to which Discord server this server is linked"
+    default: true
+  discordmc.message.write:
+    description: "Permission to send messages to the Discord server using the /discord command"
+  discordmc.message.read:
+    description: "Permission to read the exchange between the Discord server and this server"
+    default: true
+  discordmc.link.*:
+    description: "Permission to create and delete Discord links as well as view information about them"
+    children:
+      discordmc.link.establish: true
+      discordmc.link.detach: true
+      discordmc.link.info: true
+  discordmc.message.*:
+    description: "Permission to write and read the message exchange between the Discord and the Minecraft server"
+    children:
+      discordmc.message.write: true
+      discordmc.message.read: true
+  discordmc.*:
+    description: "Permission for everything related to DiscordMc"
+    children:
+      discordmc.link.*: true
+      discordmc.message.*: true
+

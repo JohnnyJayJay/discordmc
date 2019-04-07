@@ -4,9 +4,8 @@ import io.ktor.auth.Principal
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.select
-import java.util.*
 
-object Servers : Table() {
+object Servers : Table(name = "servers") {
     val guildId = long("guild_id").uniqueIndex()
     val guid = varchar("server_id", 50).uniqueIndex()
     val authId = varchar("auth_id", 60).primaryKey()

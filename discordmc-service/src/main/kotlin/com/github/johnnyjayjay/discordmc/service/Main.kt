@@ -24,10 +24,9 @@ fun main(args: Array<String>) {
     Database.connect(
         url = "jdbc:postgresql://localhost:5432/discordmc",
         driver = "org.postgresql.Driver",
-        user = "root"
+        user = "application",
+        password = System.getenv("discordmc_dbpw")
     )
-
-    SchemaUtils.create(Servers)
 
     Bot.start()
     val server = embeddedServer(factory = Netty, port = 8080) {
