@@ -2,9 +2,7 @@ package com.github.johnnyjayjay.discordmc.service
 
 import com.github.johnnyjayjay.discordmc.service.bot.Bot
 import com.github.johnnyjayjay.discordmc.service.web.PostMessageBody
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
 import net.dv8tion.jda.core.entities.Icon
 import net.dv8tion.jda.core.entities.TextChannel
 import net.dv8tion.jda.webhook.WebhookClient
@@ -19,47 +17,40 @@ object Messages {
 
     private val webhookClients = mutableMapOf<Long, WebhookClient>()
 
-    suspend fun sendMessage(ctx: MessageContext) {
-        val (guildId, guid, authId, channelId) = ctx.server
-        val (content, author) = ctx.message
+    suspend fun sendMessage(ctx: MessageContext) = with (ctx) {
+        val (guildId, _, _, channelId) = server
+        val (content, author) = message
         val channel = Bot.getChannel(guildId, channelId)
         if (channel == null) {
-            ctx.callback(MessageState.NO_CHANNEL)
+            callback(MessageState.NO_CHANNEL)
             return
         }
 
-        val client = webhookClients[guildId]
+        var client = webhookClients[guildId]
         if (client == null) {
-            insertClientAndSend(channel, ctx)
-            return
-        }
-
-        client.send(WebhookMessageBuilder().setUsername(author).setContent(content).build()).await()
-        ctx.callback(MessageState.SENT)
-    }
-
-    private suspend fun insertClientAndSend(channel: TextChannel, ctx: MessageContext) {
-        val webhooks = channel.webhooks.submit().await()
-        val guidString = ctx.server.guid.toString()
-        val webhook = webhooks.firstOrNull { it.name == guidString }
-        if (webhook == null) {
-            channel.sendMessage(
-                "Minecraft messages may not be received due to unexpected changes to important parts " +
-                        "of this channel\nPlease use `${Bot.prefix}channel` again, @Administrator"
-            ).queue()
-            Servers.update(where = {
-                Servers.authId eq ctx.server.authId
-            }, body = { statement ->
-                statement[channelId] = 0L
-            })
-            GlobalScope.launch {
-                ctx.callback(MessageState.NO_WEBHOOK)
+            val webhooks = channel.webhooks.submit().await()
+            val guidString = server.serverId.toString()
+            val webhook = webhooks.firstOrNull { it.name == guidString }
+            if (webhook == null) {
+                channel.sendMessage(
+                    "Minecraft messages may not be received due to unexpected changes to important parts " +
+                            "of this channel\nPlease use `${Bot.prefix}channel` again, @Administrator"
+                ).queue()
+                Servers.update(where = {
+                    Servers.authId eq server.authId
+                }, body = { statement ->
+                    statement[Servers.channelId] = 0L
+                })
+                callback(MessageState.NO_WEBHOOK)
+                return
+            } else {
+                client = WebhookClientBuilder(webhook).build()
+                webhookClients[server.guildId] = client
             }
-        } else {
-            val client = WebhookClientBuilder(webhook).build()
-            webhookClients[ctx.server.guildId] = client
-            sendMessage(ctx)
         }
+
+        client!!.send(WebhookMessageBuilder().setUsername(author).setContent(content).build()).await()
+        callback(MessageState.SENT)
     }
 
     fun TextChannel.createWebhook(guildId: Long) {

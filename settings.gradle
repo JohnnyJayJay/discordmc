@@ -1,4 +1,4 @@
 rootProject.name = "discordmc"
-rootProject.name = 'discordmc'
-rootProject.name = 'discordmc'
+include("discordmc-service", "discordmc-plugin")
+
 

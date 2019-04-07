@@ -50,6 +50,10 @@ object Verification {
 
     fun associatedGuild(code: Int) = codesWaiting[code]!!
 
+    fun invalidate(code: Int) {
+        codesWaiting.remove(code)
+    }
+
     fun insert(guildId: Long): Int {
         val code = generateCode()
         codesWaiting[code] = guildId

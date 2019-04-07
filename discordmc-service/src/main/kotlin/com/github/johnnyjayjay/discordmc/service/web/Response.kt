@@ -1,5 +1,6 @@
 package com.github.johnnyjayjay.discordmc.service.web
 
+import com.beust.klaxon.Json
 import com.github.johnnyjayjay.discordmc.service.klaxon
 import io.ktor.application.ApplicationCall
 import io.ktor.http.ContentType
@@ -14,11 +15,22 @@ object SuccessResponse: JsonResponse {
      override val code = HttpStatusCode.OK.value
 }
 
-data class KeyResponse(val key: String, override val code: Int = HttpStatusCode.OK.value):
-    JsonResponse
+data class Guild(val name: String, val id: Long)
+
+data class KeyResponse(val key: String, val guild: Guild): JsonResponse {
+    override val code: Int = HttpStatusCode.OK.value
+}
 
 data class ErrorResponse(override val code: Int, val message: String):
     JsonResponse
+
+data class InfoResponse(
+    val guild: Guild,
+    @Json(name = "linked_channel")
+    val linkedChannel: String?
+) : JsonResponse {
+    override val code: Int = HttpStatusCode.OK.value
+}
 
 suspend fun ApplicationCall.respond(body: ResponseBuilder.() -> Unit) {
     val builder = ResponseBuilder()

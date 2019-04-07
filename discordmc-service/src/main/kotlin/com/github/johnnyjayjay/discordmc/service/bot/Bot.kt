@@ -17,8 +17,10 @@ object Bot {
             .setOwnerId("234343108773412864")
             .addAnnotatedModule(Commands)
             .build()
-        jda = JDABuilder(token).addEventListener(client).build()
+        jda = JDABuilder(token).addEventListener(client, DeletionListener).build()
     }
+
+    fun getGuildName(id: Long) = jda!!.getGuildById(id)?.name
 
     fun getChannel(guildId: Long, channelId: Long) =
         jda!!.getGuildById(guildId)?.getTextChannelById(channelId)

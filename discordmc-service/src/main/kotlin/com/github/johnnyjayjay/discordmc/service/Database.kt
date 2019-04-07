@@ -8,12 +8,12 @@ import java.util.*
 
 object Servers : Table() {
     val guildId = long("guild_id").uniqueIndex()
-    val guid = uuid("guid").uniqueIndex()
+    val guid = varchar("server_id", 50).uniqueIndex()
     val authId = varchar("auth_id", 60).primaryKey()
     val channelId = long("message_channel_id").default(0)
 }
 
-data class Server(val guildId: Long, val guid: UUID, val authId: String, val channelId: Long) : Principal {
+data class Server(val guildId: Long, val serverId: String, val authId: String, val channelId: Long) : Principal {
     companion object {
         fun fromResultRow(row: ResultRow) =
             Server(row[Servers.guildId], row[Servers.guid], row[Servers.authId], row[Servers.channelId])
