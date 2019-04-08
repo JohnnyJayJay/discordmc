@@ -10,17 +10,20 @@ object Commands {
         val code = if (args.size == 1) args[0].toIntOrNull() ?: return false else return false
         @Suppress("DEPRECATION")
         val serverId = sender.server.serverId
-        Requests.async {
-            val result = register(serverId, code)
-            if (result == null) {
+
+        Requests.async({ register(serverId, code) }) {
+            if (errored) {
                 sender.sendMessage(
-                    "§cThat is not a valid verification code. Make sure " +
-                            "that you entered everything correctly and that the code has not expired already."
+                    "§cCould not register a link for this server, because ${when (type) {
+                        ResponseType.NotAcceptable -> "that verification code does not exist"
+                        else -> "[unknown reason]. Please report this to the developers"
+                    }}."
                 )
             } else {
-                Requests.token = result.first
-                TokenStash.token = result.first
-                val guild = result.second
+                val content = content!!
+                TokenStash.token = content.first
+                Requests.token = content.first
+                val guild = content.second
                 sender.sendMessage("§aSuccessfully connected this server with §6${guild.name} (${guild.id})§a!")
             }
         }
@@ -31,12 +34,11 @@ object Commands {
         if (args.isNotEmpty())
             return false
 
-        Requests.async {
-            if (detach()) {
-                sender.sendMessage("§aThe link to the Discord server was successfully deleted.")
-            } else {
-                sender.sendMessage("§cThere is no link to detach from!")
-            }
+        Requests.async({ detach() }) {
+            sender.sendMessage(
+                if (errored) "§cThere is no link to detach from!"
+                else "§aThe link to the Discord server was successfully deleted."
+            )
         }
         return true
     }
@@ -47,15 +49,19 @@ object Commands {
 
         val message = args.joinToString(" ")
         val author = sender.name
-        Requests.async {
-            if (postMessage(author = author, content = message)) {
+        Requests.async({ postMessage(author, message) }) {
+            if (errored) {
+                sender.sendMessage(
+                    "§Your message could not be sent, because ${when (type) {
+                        ResponseType.NotLinked -> "this server is not linked to a Discord server"
+                        ResponseType.RateLimit -> "you've sent too many messages in a very short amount of time"
+                        ResponseType.NotAcceptable -> "there is either no Discord message channel set or it was unexpectedly modified"
+                        else -> "[unknown reason]. Please report this to the developers"
+                    }}."
+                )
+            } else {
                 sender.sendMessage("§aYour message was sent to the Discord server.")
                 Bukkit.broadcast("$author -> Discord: $message", "discordmc.message.read")
-            } else {
-                sender.sendMessage(
-                    "§cMessage to Discord server could not be sent. Make sure that a Discord server " +
-                            "and a corresponding text channel are linked to this server by using §a/linkinfo§c."
-                )
             }
         }
         return true
@@ -65,13 +71,20 @@ object Commands {
         if (args.isNotEmpty())
             return false
 
-        val info = Requests.getInfo()
-        sender.sendMessage(
-            if (info == null) "§aThis server is currently not linked to any Discord server"
-            else "§aThis server is linked to §6${info.guild.name} (${info.guild.id})§a.\n" +
-                    if (info.linkedChannel == null) "No message channel is set."
-                    else "Messages are being forwarded to §6# ${info.linkedChannel}§a."
-        )
+        Requests.async({ getInfo() }) {
+            sender.sendMessage(
+                when (type) {
+                    ResponseType.OK -> """
+                    |§aThis server is linked to §6${content!!.guild.name} (${content.guild.id})§a.
+                    |${if (content.linkedChannel == null) "§cNo message channel is set"
+                    else "Messages are being forwarded to §6# ${content.linkedChannel}"}
+                    """.trimMargin()
+                    ResponseType.NotLinked -> "§aThis server is currently not linked to any Discord server."
+                    ResponseType.RateLimit -> "§cCould not get info - you are sending too many requests at once."
+                    else -> "§cUnknown issue. Please report this to the developers."
+                }
+            )
+        }
         return true
     }
 

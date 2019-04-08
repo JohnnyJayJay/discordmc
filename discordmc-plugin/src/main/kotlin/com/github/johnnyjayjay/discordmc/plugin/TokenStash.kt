@@ -19,8 +19,4 @@ object TokenStash {
             return if (content.isEmpty()) null else content
         }
         set(value) = file.writeText(value ?: "")
-
-    fun applyToken() {
-        Requests.token = token
-    }
 }

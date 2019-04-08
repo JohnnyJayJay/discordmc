@@ -3,7 +3,12 @@ package com.github.johnnyjayjay.discordmc.service
 import com.beust.klaxon.Klaxon
 import com.github.johnnyjayjay.discordmc.service.web.JwtAuth.configure
 import com.github.johnnyjayjay.discordmc.service.bot.Bot
+import com.github.johnnyjayjay.discordmc.service.ratelimit.MapRateLimitController
+import com.github.johnnyjayjay.discordmc.service.ratelimit.RateLimits
+import com.github.johnnyjayjay.discordmc.service.ratelimit.rateLimit
 import com.github.johnnyjayjay.discordmc.service.web.Endpoints
+import io.ktor.application.install
+import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.auth.authentication
 import io.ktor.routing.delete
@@ -30,16 +35,22 @@ fun main(args: Array<String>) {
 
     Bot.start()
     val server = embeddedServer(factory = Netty, port = 8080) {
+        install(Authentication)
+        install(RateLimits)
+
         authentication {
             configure()
         }
 
         routing {
+
             post("/register") { Endpoints.register(this) }
 
             authenticate {
-                get("/info") { Endpoints.linkInfo(this) }
-                post("/message") { Endpoints.postMessage(this) }
+                rateLimit(limit = 5, seconds = 5) {
+                    get("/info") { Endpoints.linkInfo(this) }
+                    post("/message") { Endpoints.postMessage(this) }
+                }
                 delete("/detach") { Endpoints.detach(this) }
             }
         }

@@ -11,7 +11,6 @@ class DiscordMc: JavaPlugin() {
         getCommand("linkinfo")?.setExecutor(Commands::linkInfo)
         getCommand("detach")?.setExecutor(Commands::detach)
         getCommand("discord")?.setExecutor(Commands::discord)
-        TokenStash.applyToken()
         Bukkit.getLogger().log(Level.INFO, "Components loaded - plugin created by Johnny#3826")
         if (Requests.token == null)
             Bukkit.getLogger().log(Level.INFO, "This server is not linked yet - see here how to do it: ")

@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.request.authorization
 import io.ktor.request.receive
 import io.ktor.request.receiveOrNull
+import io.ktor.response.respond
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.pipeline.PipelineContext
 import org.jetbrains.exposed.sql.deleteWhere
@@ -25,31 +26,16 @@ object Endpoints {
         Servers.deleteWhere {
             Servers.authId eq authId
         }
-        call.respond {
-            status = HttpStatusCode.OK
-            jsonResponse = SuccessResponse
-        }
+        call.respond(HttpStatusCode.OK)
     }
 
     suspend fun register(ctx: PipelineContext<Unit, ApplicationCall>) {
         val call = ctx.call
         val body = call.receiveOrNull<RegisterBody>()
         if (body == null) {
-            call.respond {
-                status = HttpStatusCode.BadRequest
-                jsonResponse = ErrorResponse(
-                    HttpStatusCode.BadRequest.value,
-                    "No json object with serverId and guild id provided"
-                )
-            }
+            call.respond(HttpStatusCode.BadRequest)
         } else if (!Verification.exists(code = body.code)) {
-            call.respond {
-                status = HttpStatusCode.NotAcceptable
-                jsonResponse = ErrorResponse(
-                    HttpStatusCode.NotAcceptable.value,
-                    "Verification code '${body.code}' does not exist"
-                )
-            }
+            call.respond(HttpStatusCode.NotAcceptable)
         } else {
             val code = body.code
             val serverId = body.serverId
@@ -67,7 +53,8 @@ object Endpoints {
                 it[authId] = token.toToken().id
             }
 
-            call.respond {
+            call.respondJson {
+                status = HttpStatusCode.OK
                 jsonResponse = KeyResponse(token, Guild(Bot.getGuildName(guildId)!!, guildId))
             }
         }
@@ -86,20 +73,10 @@ object Endpoints {
         ) {
             when (it) {
                 MessageState.SENT ->
-                    call.respond {
-                        jsonResponse = SuccessResponse
-                    }
+                    call.respond(HttpStatusCode.OK)
                 MessageState.NO_WEBHOOK,
                 MessageState.NO_CHANNEL ->
-                    call.respond {
-                        status = HttpStatusCode.NotAcceptable
-                        jsonResponse = ErrorResponse(
-                            HttpStatusCode.NotAcceptable.value,
-                            "Sending message to text channel failed: " +
-                                    if (it == MessageState.NO_WEBHOOK) "webhook was deleted"
-                                    else "text channel does not exist"
-                        )
-                    }
+                    call.respond(HttpStatusCode.NotAcceptable)
             }
 
 
@@ -119,7 +96,7 @@ object Endpoints {
                 linkedChannel = Bot.getChannel(guildId, it[Servers.channelId])?.name
             )
         }
-        call.respond {
+        call.respondJson {
             status = HttpStatusCode.OK
             this.jsonResponse = jsonResponse
         }

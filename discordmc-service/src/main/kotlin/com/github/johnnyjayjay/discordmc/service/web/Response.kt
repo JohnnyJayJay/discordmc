@@ -11,18 +11,11 @@ interface JsonResponse {
     val code: Int
 }
 
-object SuccessResponse: JsonResponse {
-     override val code = HttpStatusCode.OK.value
-}
-
 data class Guild(val name: String, val id: Long)
 
 data class KeyResponse(val key: String, val guild: Guild): JsonResponse {
     override val code: Int = HttpStatusCode.OK.value
 }
-
-data class ErrorResponse(override val code: Int, val message: String):
-    JsonResponse
 
 data class InfoResponse(
     val guild: Guild,
@@ -32,7 +25,7 @@ data class InfoResponse(
     override val code: Int = HttpStatusCode.OK.value
 }
 
-suspend fun ApplicationCall.respond(body: ResponseBuilder.() -> Unit) {
+suspend inline fun ApplicationCall.respondJson(body: ResponseBuilder.() -> Unit) {
     val builder = ResponseBuilder()
     builder.body()
     builder.respond(this)
